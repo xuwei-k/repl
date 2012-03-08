@@ -21,14 +21,15 @@ object Plugin extends sbt.Plugin{
       "org.scala-lang" % "scala-partest" % _
     },
     (sourceGenerators in Compile) <+= (
-      replSourceFiles in Compile,sourceManaged in Compile,scalacOptions in Compile
-    ).map{ (in,out,opt) =>
+      replSourceFiles in Compile,sourceManaged in Compile,
+      scalacOptions in Compile,dependencyClasspath in Compile
+    ).map{ (in,out,opt,path) =>
       in.map{ f =>
         val src = {
           "object `" + f.name.replace(".scala","") + "` extends scala.tools.partest.ReplTest{def code={\"\"\"" +
           IO.readLines(f).mkString("\n") + "\"\"\"}" + """
           |  override def extraSettings = "%s"
-          |}""".stripMargin.format(opt.mkString(" "))
+          |}""".stripMargin.format(opt.mkString(" ")+" -cp "+path.map{_.data}.mkString(":"))
         }
         val file = out / f.name
         IO.write(file,src)
