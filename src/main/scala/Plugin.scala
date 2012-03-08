@@ -13,15 +13,15 @@ object Plugin extends sbt.Plugin{
   import ReplKeys._
 
   lazy val replSettings: Seq[Project.Setting[_]] = Seq(
-    replSourceDirectory <<= (sourceDirectory in Compile){_ / "repl"},
-    replSourceFiles <<= (replSourceDirectory in Compile)map{ _ ** "*.scala" get},
-    watchSources in Compile <++= replSourceFiles,
+    (replSourceDirectory in Compile) <<= (sourceDirectory in Compile){_ / "repl"},
+    (replSourceFiles in Compile) <<= (replSourceDirectory in Compile)map{ _ ** "*.scala" get},
+    watchSources in GlobalScope <++= replSourceFiles in Compile,
     fork := true,
     libraryDependencies <+= (scalaVersion){
       "org.scala-lang" % "scala-partest" % _
     },
     (sourceGenerators in Compile) <+= (
-      replSourceFiles,sourceManaged in Compile,scalacOptions in Compile
+      replSourceFiles in Compile,sourceManaged in Compile,scalacOptions in Compile
     ).map{ (in,out,opt) =>
       in.map{ f =>
         val src = {
