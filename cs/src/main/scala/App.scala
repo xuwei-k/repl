@@ -1,6 +1,7 @@
 package com.github.xuwei_k.repl
 
 import sbt._
+import sbt.test.ScriptedTests
 import scala.util.control.Exception.allCatch
 
 class App extends xsbti.AppMain {
@@ -30,11 +31,16 @@ object App {
   def run0(f:File,option:Seq[String] = Nil){
     val str = Core.generate(f,option,Nil)
     println(str)
-    IO.withTemporaryFile("repl",".scala"){ file =>
-      IO.write(file,str + "\n\n" + f.getName.replace(".scala","") + " main null" )
-      val cmd = "scala " + file.toString
-      println(cmd)
-      cmd.lines_! foreach println
+    IO.withTemporaryDirectory{ dir =>
+      IO.write(dir/"build.sbt","import com.github.xuwei_k.repl._\n\nseq(replSettings: _*)")
+      IO.write(dir/"src"/"main"/"repl",str)
+      IO.write(dir/"test","> run\n")
+      IO.write(dir/"project"/"plugins.sbt",
+        """addCompilerPlugin("com.github.xuwei_k" % "repl-plugin" % "0.1-SNAPSHOT" )""")
+      val jar = xsbt.boot.Launch.getClass.getProtectionDomain.getCodeSource.getLocation.getFile
+      println(dir,jar)
+      ScriptedTests.run(dir,false,"0.11.2","2.9.1","2.9.1",Array("foo/bar"),file(jar))
+      Thread.sleep(20000)
     }
   }
 

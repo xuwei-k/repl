@@ -24,7 +24,7 @@ object build extends Build{
     file("core"),
     settings = buildSettings ++ Seq(
       libraryDependencies <++= (sbtDependency, sbtVersion) { (sd, sv) =>
-        Seq(sd,"org.scala-tools.sbt" %% "scripted-plugin" % sv)
+        Seq(sd % "compile","org.scala-tools.sbt" %% "scripted-sbt" % sv)
       }
     )
   )
@@ -42,6 +42,12 @@ object build extends Build{
     "repl",
     file("cs"),
     settings = buildSettings ++ conscript.Harness.conscriptSettings ++ Seq(
+      libraryDependencies <++= (sbtVersion){ v =>
+        Seq(
+          "org.scala-tools.sbt" %% "api" % v,
+          "org.scala-tools.sbt" %  "launcher" % v
+        )
+      }
     )
   )dependsOn(core)
 
