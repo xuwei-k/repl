@@ -4,10 +4,10 @@ import sbt._
 import Keys._
 
 object Plugin extends sbt.Plugin{
-  
+
   object ReplKeys{
-    val replSourceDirectory = SettingKey[File]("repl-source-directory")    
-    val replSourceFiles = TaskKey[Seq[File]]("repl-source-files")    
+    val replSourceDirectory = SettingKey[File]("repl-source-directory")
+    val replSourceFiles = TaskKey[Seq[File]]("repl-source-files")
   }
 
   import ReplKeys._
@@ -25,14 +25,8 @@ object Plugin extends sbt.Plugin{
       scalacOptions in Compile,dependencyClasspath in Compile
     ).map{ (in,out,opt,path) =>
       in.map{ f =>
-        val src = {
-          "object `" + f.name.replace(".scala","") + "` extends scala.tools.partest.ReplTest{def code={\"\"\"" +
-          IO.readLines(f).mkString("\n") + "\"\"\"}" + """
-          |  override def extraSettings = "%s"
-          |}""".stripMargin.format(opt.mkString(" ")+" -cp "+path.map{_.data}.mkString(":"))
-        }
         val file = out / f.name
-        IO.write(file,src)
+        IO.write(file,Core.generate(f,opt,path.map{_.data}))
         file
       }.toSeq
     }

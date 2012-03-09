@@ -4,14 +4,16 @@ import sbt.ScriptedPlugin._
 
 object build extends Build{
 
-  lazy val buildSettings = Defaults.defaultSettings ++ Seq(
-    organization := "com.github.xuwei-k",
-    version := "0.1-SNAPSHOT",
-    scalacOptions := Seq("-deprecation", "-unchecked")
-  )
+  lazy val buildSettings = {
+    Defaults.defaultSettings ++ Seq(
+      organization := "com.github.xuwei-k",
+      version := "0.1-SNAPSHOT",
+      scalacOptions := Seq("-deprecation", "-unchecked")
+    )
+  }
 
   lazy val repl = Project(
-    "repl",
+    "root",
     file("."),
     settings = buildSettings ++ Seq(
     )
@@ -21,6 +23,9 @@ object build extends Build{
     "core",
     file("core"),
     settings = buildSettings ++ Seq(
+      libraryDependencies <++= (sbtDependency, sbtVersion) { (sd, sv) =>
+        Seq(sd,"org.scala-tools.sbt" %% "scripted-plugin" % sv)
+      }
     )
   )
 
@@ -28,20 +33,17 @@ object build extends Build{
     "repl-plugin",
     file("plugin"),
     settings = buildSettings ++ scriptedSettings ++ Seq(
-      libraryDependencies <++= (sbtDependency, sbtVersion) { (sd, sv) =>
-        Seq(sd,"org.scala-tools.sbt" %% "scripted-plugin" % sv)
-      },
       scriptedBufferLog := false,
       sbtPlugin := true
     )
-  )
+  )dependsOn(core)
 
   lazy val cs = Project(
-    "cs",
+    "repl",
     file("cs"),
     settings = buildSettings ++ conscript.Harness.conscriptSettings ++ Seq(
     )
-  )
+  )dependsOn(core)
 
 }
 
