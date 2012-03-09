@@ -1,6 +1,9 @@
 target
 project/target
 project/project/target
+core/target
+plugin/target
+cs/target
 *.jar
 *.swp
 *.class
