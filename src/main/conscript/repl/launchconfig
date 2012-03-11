@@ -1,0 +1,11 @@
+[app]
+  version: 0.1-SNAPSHOT
+  org: com.github.xuwei-k
+  name: repl
+  class: com.github.xuwei_k.repl.App
+[scala]
+  version: 2.9.1
+[repositories]
+  local
+  scala-tools-releases
+  maven-central
