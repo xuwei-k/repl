@@ -45,7 +45,8 @@ object build extends Build{
       libraryDependencies <++= (sbtVersion){ v =>
         Seq(
           "org.scala-tools.sbt" %% "api" % v,
-          "org.scala-tools.sbt" %  "launcher" % v
+          "org.scala-tools.sbt" %  "launcher" % v,
+          "org.scala-tools.sbt" %  "interface" % v % "compile"
         )
       }
     )
