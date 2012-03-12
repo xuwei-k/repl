@@ -28,15 +28,17 @@ object App {
     }
   }
 
-  // https://github.com/harrah/xsbt/blob/v0.11.2/main/Main.scala#L36
+  val REPL = "repl"
 
+  // https://github.com/harrah/xsbt/blob/v0.11.2/main/Main.scala#L36
   def run0(conf:xsbti.AppConfiguration,f:File,option:Seq[String] = Nil){
-    val str = Core.generate(f,option,Nil)
-    println(str)
     import BuiltinCommands.initialAttributes
-    val commands = f.getName +: conf.arguments.map(_.trim)
-    val state = State( conf,ReplCommands, Set.empty, None, commands, State.newHistory, initialAttributes, State.Continue )
-    MainLoop.runLogged(state)
+    val commands = REPL +: conf.arguments.map(_.trim)
+    val state = State( conf,ReplCommands, Set.empty, None, commands, State.newHistory, initialAttributes, State.KeepLastLog)
+    val loggedState = state.put(globalLogging,GlobalLogging(LogManager.defaultScreen,ConsoleLogger(),GlobalLogBacking(MainLoop.newBackingFile(), None)))
+    val ret = MainLoop.runLoggedLoop(loggedState,GlobalLogBacking(MainLoop.newBackingFile(), None))
+    println(ret)
+    ret
   }
 
   def ReplCommands = {
@@ -44,17 +46,33 @@ object App {
     Seq(ignore, exit, replCommand, act, nop)
   }
 
+  def header(version:String) =
+    """
+      |/***
+      |
+      |libraryDependencies += "org.scala-lang" % "scala-partest" % "2.9.1"
+      |
+      |*/
+      |""".stripMargin
+
+  def createSource(f:File,opt:Seq[String],version:String):String = {
+    header(version) ++ "\n" ++Core.generate(f,opt,Nil) ++ "\n\n" ++ f.getName ++ ".eval.foreach(println)\n\n"
+  }
+
   import EvaluateConfigurations.{evaluateConfiguration => evaluate}
   // https://github.com/harrah/xsbt/blob/v0.11.2/main/Script.scala#L14
   lazy val replCommand = 
-    Command.command("script") { state =>
+    Command.command(REPL) { state =>
       val Seq(scriptArg,opt @ _*) = state.remainingCommands
+      println(state.remainingCommands)
       val originalFile = new File(scriptArg).getAbsoluteFile
       val hash = Hash.halve(Hash.toHex(Hash(originalFile.getAbsolutePath)))
       val base = new File(CommandSupport.bootDirectory(state), hash)
       IO.createDirectory(base)
-      val script = base / "script.scala"
-      IO.write(script,Core.generate(originalFile,opt,Nil))
+      val script = (base / "script").getAbsoluteFile
+      val str = createSource(originalFile,opt,"2.9.1")
+      println(str)
+      IO.write(script,str)
 
       val (eval, structure) = Load.defaultLoad(state, base, state.log)
       val session = Load.initialSession(structure, eval)
@@ -66,7 +84,7 @@ object App {
       }
       val scriptAsSource = sources in Compile := script :: Nil
       val asScript = scalacOptions ++= Seq("-Xscript", script.getName.stripSuffix(".scala"))
-      val scriptSettings = Seq(asScript, scriptAsSource, logLevel in Global := Level.Warn, showSuccess in Global := false)
+      val scriptSettings = Seq(asScript, scriptAsSource, logLevel in Global := Level.Debug, showSuccess in Global := false)
       val append = Load.transformSettings(Load.projectScope(currentRef), currentRef.build, rootProject, scriptSettings ++ embeddedSettings)
  
       val newStructure = Load.reapply(session.original ++ append, structure)
