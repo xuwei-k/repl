@@ -15,7 +15,10 @@ object Core{
     generate(
       input.getName.replace(".scala",""),
       IO.readLines(input),
-      options :+ path.mkString("-cp ",":","") // TODO windows ?
+      options :+ {
+        if(! path.isEmpty) path.mkString("-cp ",":","") //  TODO windows ?
+        else ""
+      }
     )
 
 }
