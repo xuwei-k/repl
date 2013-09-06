@@ -1,5 +1,5 @@
 > compile
-$ exists target/scala-2.10.0-M2/src_managed/main/Main.scala
-$ exec cat target/scala-2.10.0-M2/src_managed/main/Main.scala
+$ exists target/scala-2.10/src_managed/main/Main.scala
+$ exec cat target/scala-2.10/src_managed/main/Main.scala
 > run
 

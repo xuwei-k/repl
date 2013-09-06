@@ -8,7 +8,7 @@ version := "0.1-SNAPSHOT"
 
 scalacOptions := Seq("-deprecation", "-unchecked")
 
-seq(ScriptedPlugin.scriptedSettings: _*)
+ScriptedPlugin.scriptedSettings
 
 scriptedBufferLog := false
 
