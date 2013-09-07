@@ -12,8 +12,10 @@ ScriptedPlugin.scriptedSettings
 
 scriptedBufferLog := false
 
-publishTo := {
-  sys.env.get("MAVEN_DIRECTORY").map{ dir =>
-    Resolver.file("gh-pages",file(dir))(Patterns(true, Resolver.mavenStyleBasePattern))
-  }
+scriptedLaunchOpts ++= sys.process.javaVmArguments.filter(
+  a => Seq("-Xmx","-Xms","-XX").exists(a.startsWith)
+)
+
+publishTo := sys.env.get("MAVEN_DIRECTORY").map{ dir =>
+  Resolver.file("gh-pages",file(dir))(Patterns(true, Resolver.mavenStyleBasePattern))
 }
